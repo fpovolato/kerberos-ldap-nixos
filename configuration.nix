@@ -64,7 +64,7 @@
       {
         networking.useHostResolvConf = lib.mkForce false;
         services.resolved.enable = true;
-        enviroment.systemPackages = with pkgs; [ neovim ];
+        environment.systemPackages = with pkgs; [ neovim ];
         system.stateVersion = "26.05";
       };
   };
@@ -85,7 +85,7 @@
       {
         networking.useHostResolvConf = lib.mkForce false;
         services.resolved.enable = true;
-        enviroment.systemPackages = with pkgs; [ neovim ];
+        environment.systemPackages = with pkgs; [ neovim ];
         system.stateVersion = "26.05";
       };
   };
