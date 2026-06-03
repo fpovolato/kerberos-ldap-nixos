@@ -33,6 +33,8 @@
     vim
     wget
     neovim
+    ncurses
+    openldap
   ];
 
   services.openssh.enable = true;
@@ -63,8 +65,95 @@
       }:
       {
         networking.useHostResolvConf = lib.mkForce false;
+        networking.firewall.allowedTCPPorts = [ 389 ];
         services.resolved.enable = true;
-        environment.systemPackages = with pkgs; [ neovim ];
+
+        services.openldap = {
+          enable = true;
+          urlList = [ "ldap:///" ];
+
+          settings = {
+            attrs.olcLogLevel = "conns config";
+
+            children = {
+              "cn=schema".includes = [
+              "${pkgs.openldap}/etc/schema/core.ldif"
+              "${pkgs.openldap}/etc/schema/cosine.ldif"
+              "${pkgs.openldap}/etc/schema/inetorgperson.ldif"
+              "${pkgs.openldap}/etc/schema/nis.ldif"
+              ];
+
+              "olcDatabase={1}mdb".attrs = {
+                objectClass = [ "olcDatabaseConfig" "olcMdbConfig" ];
+                olcdatabase = "{1}mdb";
+                olcDbDirectory = "/var/lib/openldap/data";
+                olcSuffix = "dc=example,dc=lan";
+                olcRootDN = "cn=admin,dc=example,dc=lan";
+                olcRootPw.path = pkgs.writeText "olcRootPW" "adminpass";
+
+                olcAccess = [
+                  ''{0}to attrs=userPassword
+                    by self write
+                    by anonymous auth
+                    by * none''
+                  ''{1}to *
+                    by * read''
+                ];
+              };
+            };
+          };
+
+          # Popola il DB al primo avvio
+          declarativeContents."dc=example,dc=lan" = ''
+          dn: dc=example,dc=lan
+          objectClass: top
+          objectClass: dcObject
+          objectClass: organization
+          o: Example Organization
+          dc: example
+
+          dn: ou=People,dc=example,dc=lan
+          objectClass: top
+          objectClass: organizationalUnit
+          ou: People
+
+          dn: ou=Groups,dc=example,dc=lan
+          objectClass: top
+          objectClass: organizationalUnit
+          ou: Groups
+
+          dn: uid=mario.rossi,ou=People,dc=example,dc=lan
+          objectClass: inetOrgPerson
+          objectClass: posixAccount
+          cn: Mario Rossi
+          sn: Rossi
+          uid: mario.rossi
+          uidNumber: 10001
+          gidNumber: 10001
+          homeDirectory: /home/mario.rossi
+          loginShell: /bin/bash
+
+          dn: uid=luigi.verdi,ou=People,dc=example,dc=lan
+          objectClass: inetOrgPerson
+          objectClass: posixAccount
+          cn: Luigi Verdi
+          sn: Verdi
+          uid: luigi.verdi
+          uidNumber: 10002
+          gidNumber: 10001
+          homeDirectory: /home/luigi.verdi
+          loginShell: /bin/bash
+
+          dn: cn=utenti,ou=Groups,dc=example,dc=lan
+          objectClass: posixGroup
+          cn: utenti
+          gidNumber: 10001
+          memberUid: mario.rossi
+          memberUid: luigi.verdi
+        '';
+        };
+
+        environment.systemPackages = with pkgs; [ neovim openldap ];
         system.stateVersion = "26.05";
       };
   };
