@@ -39,7 +39,7 @@
 
   networking.nat = {
     enable = true;
-    internalInterface = [ "ve-+" ];
+    internalInterfaces = [ "ve-+" ];
     externalInterface = "enp0s1";
   };
 
