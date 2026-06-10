@@ -64,6 +64,10 @@
         ...
       }:
       {
+      	networking.extraHosts = ''
+          127.0.0.1 srv srv.example.lan
+          192.168.100.12 client client.example.lan
+        '';
         networking.useHostResolvConf = lib.mkForce false;
         networking.firewall.allowedTCPPorts = [
           389
@@ -165,7 +169,7 @@
 
         services.kerberos_server = {
           enable = true;
-          realms."EXAMPLE_LAN".acl = [
+          settings.realms."EXAMPLE.LAN".acl = [
             {
               access = "all";
               principal = "admin/admin";
@@ -176,14 +180,14 @@
         security.krb5 = {
           enable = true;
           settings = {
-            libdefaults.default_realm = "EXAMPLE_LAN";
-            realms."EXAMPLE_LAN" = {
-              kdc = "srv.example.lan";
-              admin_server = "srv.example.lan";
+            libdefaults.default_realm = "EXAMPLE.LAN";
+            realms."EXAMPLE.LAN" = {
+              kdc = "127.0.0.1";
+              admin_server = "127.0.0.1";
             };
             domain_realm = {
-              ".example.lan" = "EXAMPLE_LAN";
-              "example.lan" = "EXAMPLE_LAN";
+              ".example.lan" = "EXAMPLE.LAN";
+              "example.lan" = "EXAMPLE.LAN";
             };
           };
         };
