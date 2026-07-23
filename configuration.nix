@@ -217,7 +217,61 @@
       {
         networking.useHostResolvConf = lib.mkForce false;
         services.resolved.enable = true;
-        environment.systemPackages = with pkgs; [ neovim ];
+        networking.extraHosts = ''
+          192.168.100.11 srv srv.example.lan
+          192.168.100.12 client client.example.lan
+        '';
+        networking.firewall.allowedTCPPorts = [ 22 ];
+
+        security.krb5.enable = true;
+        environment.etc."krb5.conf".text = lib.mkForce ''
+          [libdefaults]
+            default_realm = EXAMPLE.LAN
+
+          [realms]
+            EXAMPLE.LAN = {
+              kdc = 192.168.100.11
+              admin_server = 192.168.100.11
+            }
+
+          [domain_realm]
+            .example.lan = EXAMPLE.LAN
+            example.lan = EXAMPLE.LAN
+        '';
+
+        services.sssd = {
+          enable = true;
+          config = ''
+            [sssd]
+            config_file_version = 2
+            services = nss, pam
+            domains = example.lan
+
+            [domain/example.lan]
+            id_provider = ldap
+            auth_provider = krb5
+
+            ldap_uri = ldap://192.168.100.11
+            ldap_search_base = dc=example,dc=lan
+            ldap_id_use_start_tls = false
+
+            krb5_server = 192.168.100.11
+            krb5_realm = EXAMPLE.LAN
+
+            cache_credentials = true
+            enumerate = true
+          '';
+        };
+
+        security.pam.services.login.makeHomeDir = true;
+        security.pam.services.sshd.makeHomeDir = true;
+
+        services.openssh.enable = true;
+        environment.systemPackages = with pkgs; [
+          neovim
+          krb5
+          openldap
+        ];
         system.stateVersion = "26.05";
       };
   };
