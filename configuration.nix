@@ -145,7 +145,7 @@
             uidNumber: 10001
             gidNumber: 10001
             homeDirectory: /home/mario.rossi
-            loginShell: /bin/bash
+            loginShell: /run/current-system/sw/bin/bash
 
             dn: uid=luigi.verdi,ou=People,dc=example,dc=lan
             objectClass: inetOrgPerson
@@ -156,7 +156,7 @@
             uidNumber: 10002
             gidNumber: 10001
             homeDirectory: /home/luigi.verdi
-            loginShell: /bin/bash
+            loginShell: /run/current-system/sw/bin/bash
 
             dn: cn=utenti,ou=Groups,dc=example,dc=lan
             objectClass: posixGroup
